@@ -27,20 +27,20 @@ pipeline {
                     checkout scm
                     sh 'echo ${BUILD_TIMESTAMP}'
                     sh "docker login -u gshieldsgmu -p $DOCKERHUB_PASS_PSW"
-                    sh 'docker build -t gshieldsgmu/app:${IMAGE-TAG} -f HW1Part2/Dockerfile HW1Part2'
+                    sh 'docker build -t gshieldsgmu/survey-app:${IMAGE-TAG} -f surveyapp/Dockerfile survey-app'
                 }
             }
         }
         stage('Pushing Image to DockerHub') {
             steps {
                 script {
-                    sh 'docker push gshieldsgmu/app:${IMAGE-TAG}'
+                    sh 'docker push gshieldsgmu/survey-app:${IMAGE-TAG}'
                 }
             }
         }
         stage('Deploying to Kubernetes') {
             steps {
-                sh 'kubectl --kubeconfig=/var/lib/jenkins/.kube/config set image deployment/app container-0=gshieldsgmu/app:${IMAGE_TAG} -n default'
+                sh 'kubectl --kubeconfig=/var/lib/jenkins/.kube/config set image deployment/app container-0=gshieldsgmu/survey-app:${IMAGE_TAG} -n default'
 
             }
         }
