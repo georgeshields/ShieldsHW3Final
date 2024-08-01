@@ -27,7 +27,7 @@ pipeline {
                     checkout scm
                     sh 'echo ${BUILD_TIMESTAMP}'
                     sh "docker login -u gshieldsgmu -p $DOCKERHUB_PASS_PSW"
-                    sh 'docker build -t gshieldsgmu/survey-app:${IMAGE-TAG} -f surveyapp/Dockerfile survey-app'
+                    sh 'docker build -t gshieldsgmu/survey-app:${IMAGE-TAG} -f surveyapp/Dockerfile surveyapp'
                 }
             }
         }
