@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+    environment {
+        DOCKERHUB_PASS = credentials('docker-pass')
+        IMAGE_TAG = "${env.BUILD_TIMESTAMP ?: 'latest'}"
+    }
+    stages {
+        stage('Checkout Code') {
+            steps {
+                script {
+                    // Checkout the repository
+                    checkout scm
+                }
+            }
+        }
+        stage('Debug: List Files') {
+            steps {
+                script {
+                    // List the files in the current workspace to verify Dockerfile existence
+                    sh 'ls -la'
+                }
+            }
+        }
+        stage('Building the Student Survey Image') {
+            steps {
+                script {
+                    checkout scm
+                    sh 'echo ${BUILD_TIMESTAMP}'
+                    sh "docker login -u gshieldsgmu -p $DOCKERHUB_PASS_PSW"
+                    sh 'docker build -t gshieldsgmu/app:${IMAGE-TAG} -f HW1Part2/Dockerfile HW1Part2'
+                }
+            }
+        }
+        stage('Pushing Image to DockerHub') {
+            steps {
+                script {
+                    sh 'docker push gshieldsgmu/app:${IMAGE-TAG}'
+                }
+            }
+        }
+        stage('Deploying to Kubernetes') {
+            steps {
+                sh 'kubectl --kubeconfig=/var/lib/jenkins/.kube/config set image deployment/app container-0=gshieldsgmu/app:${IMAGE_TAG} -n default'
+
+            }
+        }
+    }
+}
