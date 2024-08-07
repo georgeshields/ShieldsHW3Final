@@ -3,6 +3,7 @@ pipeline {
     environment {
         DOCKERHUB_PASS = credentials('docker-pass')
         IMAGE_TAG = "${env.BUILD_TIMESTAMP ?: 'latest'}"
+        DOCKERHUB_USER = 'gshieldsgmu' // Define DockerHub username as a variable for reuse
     }
     stages {
         stage('Checkout Code') {
@@ -24,24 +25,24 @@ pipeline {
         stage('Building the Student Survey Image') {
             steps {
                 script {
-                    checkout scm
-                    sh 'echo ${BUILD_TIMESTAMP}'
-                    sh "docker login -u gshieldsgmu -p $DOCKERHUB_PASS_PSW"
-                    sh 'docker build -t gshieldsgmu/survey-app:${IMAGE-TAG} -f surveyapp/Dockerfile surveyapp'
+                    sh "echo ${IMAGE_TAG}"
+                    sh "docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS"
+                    sh "docker build -t $DOCKERHUB_USER/survey-app:${IMAGE_TAG} -f surveyapp/Dockerfile surveyapp"
                 }
             }
         }
         stage('Pushing Image to DockerHub') {
             steps {
                 script {
-                    sh 'docker push gshieldsgmu/survey-app:${IMAGE-TAG}'
+                    sh "docker push $DOCKERHUB_USER/survey-app:${IMAGE_TAG}"
                 }
             }
         }
         stage('Deploying to Kubernetes') {
             steps {
-                sh 'kubectl --kubeconfig=/var/lib/jenkins/.kube/config set image deployment/gshieldsgmu/survey-app:latest container-0=gshieldsgmu/survey-app:${IMAGE_TAG} -n default'
-
+                script {
+                    sh "kubectl --kubeconfig=/var/lib/jenkins/.kube/config set image deployment/survey-app container-0=$DOCKERHUB_USER/survey-app:${IMAGE_TAG} -n default"
+                }
             }
         }
     }
