@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        DOCKERHUB_PASS = credentials('docker-pass')  // Ensure this matches your Jenkins credentials ID
+        DOCKERHUB_PASS = credentials('docker-pass')
         IMAGE_TAG = "${env.BUILD_TIMESTAMP ?: 'latest'}"
     }
     stages {
@@ -26,21 +26,22 @@ pipeline {
                 script {
                     checkout scm
                     sh 'echo ${BUILD_TIMESTAMP}'
-                    sh "docker login -u gshieldsgmu -p $DOCKERHUB_PASS"  // Reverted to original login command
-                    sh 'docker build -t gshieldsgmu/survey-app:${IMAGE_TAG} -f surveyapp/Dockerfile surveyapp'
+                    sh "docker login -u gshieldsgmu -p $DOCKERHUB_PASS_PSW"
+                    sh 'docker build -t gshieldsgmu/survey-app:${IMAGE-TAG} -f surveyapp/Dockerfile surveyapp'
                 }
             }
         }
         stage('Pushing Image to DockerHub') {
             steps {
                 script {
-                    sh 'docker push gshieldsgmu/survey-app:${IMAGE_TAG}'
+                    sh 'docker push gshieldsgmu/survey-app:${IMAGE-TAG}'
                 }
             }
         }
         stage('Deploying to Kubernetes') {
             steps {
-                sh 'kubectl --kubeconfig=/var/lib/jenkins/.kube/config set image deployment/survey-app container-0=gshieldsgmu/survey-app:${IMAGE_TAG} -n default'
+                sh 'kubectl --kubeconfig=/var/lib/jenkins/.kube/config set image deployment/survey-app:latest container-0=gshieldsgmu/survey-app:${IMAGE_TAG} -n default'
+
             }
         }
     }
